@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TechVisga — Demo (LocalStorage)</title>
+  <meta name="description" content="TechVisga - Demo funcional usando LocalStorage como base de datos provisoria." />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2721/2721263.png">
+
+  <style>
+  /* ======= VARIABLES Y RESET ======= */
+  :root{
+    --bg:#07080a; --card:#0f1316; --muted:#9aa3a8; --accent:#00bcd4; --glass: rgba(255,255,255,0.03);
+    --success:#00c853; --danger:#e53935; --radius:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:'Poppins',system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#050607,#0b0e11);color:#e6eef0}
+  a{color:inherit}
+
+  /* NAVBAR */
+  header.navbar{position:fixed;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;backdrop-filter: blur(8px);background:linear-gradient(180deg, rgba(10,12,14,0.6), rgba(10,12,14,0.35));border-bottom:1px solid rgba(255,255,255,0.03);z-index:1200}
+  .logo{font-weight:700;font-size:1.4rem;color:var(--accent)}
+  nav.nav-links{display:flex;gap:16px;align-items:center}
+  nav.nav-links a{position:relative;padding:8px 6px;color:#dceff1;font-weight:600;text-decoration:none}
+  nav.nav-links a:hover{color:var(--accent)}
+  .menu-toggle{display:none;cursor:pointer}
+
+  /* HERO */
+  .hero{min-height:84vh;padding:110px 28px 40px;display:flex;gap:24px;align-items:center}
+  .hero .left{flex:1;max-width:680px}
+  .eyebrow{display:inline-block;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg, rgba(0,188,212,0.1), rgba(0,188,212,0.04));color:var(--accent);font-weight:700;margin-bottom:14px}
+  .hero h1{font-size:2.1rem;margin:6px 0 14px;color:#dff8fb}
+  .hero p{color:var(--muted);margin:0 0 18px}
+  .btn{padding:10px 16px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+  .btn-primary{background:linear-gradient(90deg,var(--accent),#0097a7);color:#071018}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+  .hero-card{width:360px;border-radius:14px;padding:16px;background:linear-gradient(180deg,var(--glass), rgba(255,255,255,0.02));box-shadow:0 8px 40px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.02)}
+  .feature{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+  .feature i{background:linear-gradient(180deg,var(--accent),#0097a7);padding:10px;border-radius:10px;color:#041217}
+
+  /* SECCIONES */
+  section{padding:64px 28px}
+  .section-title{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+  .section-title h2{margin:0;color:var(--accent)}
+  .services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .card{background:linear-gradient(180deg,var(--card),rgba(255,255,255,0.01));padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);transition:transform .2s}
+  .card:hover{transform:translateY(-6px)}
+
+  /* PORTFOLIO & TIENDA */
+  .portfolio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .portfolio-item{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+  .meta{padding:12px;background:linear-gradient(180deg,transparent, rgba(0,0,0,0.18))}
+
+  /* CONTACTO */
+  .contact-card{max-width:760px;margin:0 auto;background:linear-gradient(180deg,var(--card),var(--glass));padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+  .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px}
+  input,textarea,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef0}
+  textarea{min-height:120px}
+
+  /* ADMIN */
+  .admin-panel{display:none;padding:16px;background:linear-gradient(180deg,#071014,#081217);border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+  .admin-panel.open{display:block}
+  .admin-grid{display:grid;grid-template-columns:1fr 360px;gap:14px}
+  .list-item{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03)}
+  .small{font-size:.9rem;color:var(--muted)}
+
+  /* MODAL LIGHTBOX */
+  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(3,6,8,0.6), rgba(3,6,8,0.85));z-index:2000;opacity:0;pointer-events:none;transition:opacity .2s}
+  .modal.open{opacity:1;pointer-events:auto}
+  .modal-card{background:linear-gradient(180deg,#0d1113,rgba(255,255,255,0.02));padding:18px;border-radius:12px;width:100%;max-width:720px;border:1px solid rgba(255,255,255,0.03)}
+
+  footer{padding:24px;text-align:center;color:var(--muted)}
+
+  /* RESP */ @media (max-width:900px){
+    nav.nav-links{display:none}
+    nav.nav-links.active{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+        position:absolute;
+        top:60px;
+        left:0;
+        right:0;
+        background:var(--bg);
+        padding:12px 32px;
+        border-bottom:1px solid rgba(255,255,255,0.03);
+    }
+    .menu-toggle{display:block}
+    .hero{
+        padding-top:120px;
+        flex-direction:column;
+        align-items:flex-start; /* importante para que .right no se centre demasiado */
+    }
+    #adminPanel{grid-template-columns:1fr}
+}
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">TechVisga</div>
+    <nav class="nav-links" id="navLinks">
+      <a href="#inicio">Inicio</a>
+      <a href="#servicios">Servicios</a>
+      <a href="#portafolio">Portafolio</a>
+      <a href="#testimonios">Testimonios</a>
+      <a href="#tienda">Tienda</a>
+      <a href="#contacto">Contacto</a>
+      <a href="#admin" id="loginOpen">Login</a>
+    </nav>
+    <div class="menu-toggle" id="menuToggle" aria-label="Abrir menú"><span style="display:block;width:24px;height:3px;background:var(--accent);margin:6px 0;border-radius:3px"></span></div>
+  </header>
+
+  <main>
+    <section id="inicio" class="hero">
+      <div class="left">
+        <div class="eyebrow">Soporte • Desarrollo • E-commerce</div>
+        <h1>Reparamos tu equipo y construimos tu presencia digital.</h1>
+        <p>Soluciones profesionales para PyMEs y emprendedores: desarrollo, hosting, soporte y comercio electrónico.</p>
+        <div style="display:flex;gap:10px"><button class="btn btn-primary" id="ctaPresupuesto">Solicitar presupuesto</button><a class="btn btn-ghost" href="#servicios">Ver servicios</a></div>
+      </div>
+      <div class="hero-card">
+        <div class="feature"><i>✓</i><div><strong>Diagnóstico gratuito</strong><div class="small">Evaluación remota y en tienda</div></div></div>
+        <div class="feature"><i>🚀</i><div><strong>Desarrollo rápido</strong><div class="small">Landing, tiendas y sistemas</div></div></div>
+        <div class="feature"><i>🔒</i><div><strong>Soporte seguro</strong><div class="small">Backups y buenas prácticas</div></div></div>
+      </div>
+    </section>
+
+    <section id="servicios">
+      <div class="section-title"><h2>Servicios</h2><div class="small">Qué hacemos por ti</div></div>
+      <div class="services-grid">
+        <div class="card"><i class="fa-solid fa-screwdriver-wrench"></i><h3>Reparación de Hardware</h3><p class="small">Diagnóstico, cambios de piezas y optimización térmica.</p></div>
+        <div class="card"><i class="fa-solid fa-code"></i><h3>Desarrollo Web</h3><p class="small">Páginas corporativas y sistemas a medida.</p></div>
+        <div class="card"><i class="fa-solid fa-cart-shopping"></i><h3>E-commerce</h3><p class="small">Tienda online con pasarelas y panel admin.</p></div>
+        <div class="card"><i class="fa-solid fa-database"></i><h3>Sistemas Web</h3><p class="small">Inventarios, facturación y reportes.</p></div>
+      </div>
+    </section>
+
+    <section id="portafolio">
+      <div class="section-title"><h2>Portafolio</h2><div class="small">Proyectos recientes</div></div>
+      <div class="portfolio-grid" id="portfolioGrid"></div>
+    </section>
+
+    <section id="testimonios">
+      <div class="section-title"><h2>Testimonios</h2><div class="small">Clientes satisfechos</div></div>
+      <div class="services-grid">
+        <div class="card">“Excelente servicio, rápido y confiable.” – Ana P.</div>
+        <div class="card">“Nuestra tienda mejoró las ventas en 3 meses.” – RetailX</div>
+        <div class="card">“Soporte técnico 100% recomendado.” – Gabriel R.</div>
+      </div>
+    </section>
+
+    <section id="tienda">
+      <div class="section-title"><h2>Tienda</h2><div class="small">Productos disponibles</div></div>
+      <div id="productosGrid" class="portfolio-grid"></div>
+
+      <div class="card" style="margin-top:14px">
+        <h3>Carrito</h3>
+        <div id="carritoList" class="small">No hay productos en el carrito.</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="vaciarCarrito" class="btn btn-ghost">Vaciar</button>
+          <button id="finalizarCompra" class="btn btn-primary">Finalizar compra</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="contacto">
+      <div class="section-title"><h2>Contacto</h2><div class="small">Escríbenos para una cotización</div></div>
+      <div class="contact-card">
+        <form id="contactForm" action="https://formspree.io/f/movkonnq" method="POST">
+          <div class="form-row"><input type="text" name="nombre" id="nombre" placeholder="Tu nombre" required><input type="email" name="correo" id="correo" placeholder="Tu correo" required></div>
+          <div class="form-row"><input type="text" name="asunto" id="asunto" placeholder="Asunto" required><input type="text" name="telefono" id="telefono" placeholder="Teléfono (opcional)"></div>
+          <textarea name="mensaje" id="mensaje" placeholder="Tu mensaje" required></textarea>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:10px">
+            <button class="btn btn-primary" type="submit">Enviar mensaje</button>
+            <div id="formStatus" class="small">Verás una confirmación al enviar.</div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- LOGIN MODAL -->
+    <div id="loginModal" class="modal" aria-hidden="true">
+      <div class="modal-card">
+        <h3>Iniciar sesión — Demo</h3>
+        <p class="small">Usuario demo: <code>admin</code> / Contraseña: <code>admin123</code></p>
+        <form id="loginForm">
+          <div class="form-row"><input type="text" id="user" placeholder="Usuario" required><input type="password" id="pass" placeholder="Contraseña" required></div>
+          <div style="display:flex;gap:10px;margin-top:10px"><button class="btn btn-primary" type="submit">Entrar</button><button type="button" id="closeLogin" class="btn btn-ghost">Cancelar</button></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div id="lightbox" class="modal" aria-hidden="true"><div class="modal-card center"><img id="lightboxImg" alt="Preview" style="max-width:100%;border-radius:8px"></div></div>
+
+    <!-- ADMIN PANEL -->
+    <section id="admin" style="padding:18px 28px">
+      <div class="section-title"><h2>Panel Admin (Demo)</h2><div class="small">Área de administración</div></div>
+      <div id="adminPanel" class="admin-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div><span class="badge">Estado: <strong id="adminStatus">No conectado</strong></span></div>
+          <div><button id="logoutBtn" class="btn btn-ghost">Cerrar sesión</button></div>
+        </div>
+
+        <div style="margin-top:12px" class="admin-grid">
+          <div>
+            <h4>Productos</h4>
+            <div style="display:flex;gap:8px;margin:10px 0">
+              <input id="newName" placeholder="Nombre">
+              <input id="newPrice" placeholder="Precio" type="number">
+              <input id="newImg" placeholder="URL imagen">
+              <button id="addProduct" class="btn btn-primary">Agregar</button>
+            </div>
+            <div id="adminProducts"></div>
+
+            <h4 style="margin-top:12px">Pedidos</h4>
+            <div id="adminPedidos"></div>
+
+            <h4 style="margin-top:12px">Mensajes</h4>
+            <div id="adminMensajes"></div>
+          </div>
+
+          <div style="min-width:300px">
+            <div class="card"><h4>Vista rápida</h4><div id="stats"></div></div>
+            <div class="card" style="margin-top:12px"><h4>Acciones</h4>
+              <div style="display:flex;gap:8px;margin-top:8px"><button id="seedData" class="btn btn-ghost">Cargar ejemplo</button><button id="clearData" class="btn btn-ghost">Borrar todo</button></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <footer>
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:12px">
+        <a href="https://wa.me/56957002649?text=Hola%20TechVisga!" target="_blank" class="badge">WhatsApp</a>
+        <a href="#" class="badge">Instagram</a>
+        <a href="#" class="badge">LinkedIn</a>
+      </div>
+      <div class="small">© 2025 TechVisga. Todos los derechos reservados.</div>
+    </footer>
+
+  </main>
+
+  <script>
+  /*
+    TechVisga v2 - Single file demo using LocalStorage as provisional DB.
+    Admin demo credentials: admin / admin123
+  */
+
+  // ---------- Helpers ----------
+  const qs = s => document.querySelector(s);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+  const LS_KEY = 'tv_v2_data';
+  const ADMIN_USER = 'admin';
+  const ADMIN_PASS = 'admin123';
+
+  // Default data structure
+  const defaultData = {
+    productos: [
+      {id:1,nombre:'Notebook Gamer',descripcion:'Ryzen 5, 16GB, SSD 1TB',precio:899000,imagen:'https://picsum.photos/seed/p1/600/380'},
+      {id:2,nombre:'Teclado Mecánico RGB',descripcion:'Switch blue, compacto',precio:69990,imagen:'https://picsum.photos/seed/p2/600/380'},
+      {id:3,nombre:'Paquete: Tienda Online',descripcion:'Tienda con pasarela y panel admin',precio:350000,imagen:'https://picsum.photos/seed/p3/600/380'}
+    ],
+    pedidos: [],
+    mensajes: []
+  };
+
+  // Get or init data in LocalStorage
+  function getData(){
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw){ localStorage.setItem(LS_KEY, JSON.stringify(defaultData)); return JSON.parse(JSON.stringify(defaultData)); }
+    try{ return JSON.parse(raw); }catch(e){ localStorage.setItem(LS_KEY, JSON.stringify(defaultData)); return JSON.parse(JSON.stringify(defaultData)); }
+  }
+  function setData(data){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+
+  // Seed example data (merge)
+  function seedExample(){ const data = getData(); if(data.productos.length===0){ data.productos = defaultData.productos; setData(data); renderAll(); alert('Ejemplo cargado'); } else { alert('Ya hay datos, si quieres reinicia con Borrar todo'); }}
+  function clearAll(){ if(!confirm('¿Borrar todos los datos almacenados en LocalStorage?')) return; localStorage.removeItem(LS_KEY); renderAll(); alert('Datos borrados.'); }
+
+  // ---------- Render productos y portafolio ----------
+  function renderProductos(){ const data = getData(); const cont = qs('#productosGrid'); cont.innerHTML=''; data.productos.forEach(p=>{ const el = document.createElement('div'); el.className='portfolio-item card'; el.innerHTML = `<img src="${p.imagen}" alt="${p.nombre}"><div class="meta"><strong>${p.nombre}</strong><div class="small">${p.descripcion||''}</div><div style="margin-top:8px"><strong>$ ${Number(p.precio).toLocaleString()}</strong></div><div style="margin-top:8px"><button class="btn btn-primary addToCart" data-id="${p.id}">Agregar al carrito</button></div></div>`; cont.appendChild(el); }); qsa('.addToCart').forEach(b=>b.addEventListener('click', ()=>addToCart(Number(b.dataset.id)))); renderPortfolioPreview(); }
+  function renderPortfolioPreview(){ const data = getData(); const cont = qs('#portfolioGrid'); cont.innerHTML=''; data.productos.slice(0,6).forEach(p=>{ const el = document.createElement('div'); el.className='portfolio-item'; el.innerHTML=`<img src="${p.imagen}" alt="${p.nombre}"><div class="meta"><strong>${p.nombre}</strong><div class="small">${p.descripcion||''}</div></div>`; el.addEventListener('click', ()=>openLightbox(p.imagen)); cont.appendChild(el); }); }
+
+  // ---------- Carrito (in-memory) ----------
+  let carrito = [];
+  function addToCart(id){ const data = getData(); const p = data.productos.find(x=>x.id===id); if(!p){ alert('Producto no encontrado'); return; } carrito.push(p); renderCarrito(); }
+  function renderCarrito(){ const cont = qs('#carritoList'); if(carrito.length===0){ cont.textContent='No hay productos en el carrito.'; return; } cont.innerHTML=''; let total=0; carrito.forEach((it,idx)=>{ total += Number(it.precio); const row = document.createElement('div'); row.style.display='flex'; row.style.justifyContent='space-between'; row.style.padding='6px 0'; row.innerHTML = `<div>${it.nombre}</div><div>$ ${Number(it.precio).toLocaleString()} <button data-idx="${idx}" class="btn btn-ghost removeItem">x</button></div>`; cont.appendChild(row); }); const totalEl = document.createElement('div'); totalEl.style.marginTop='8px'; totalEl.innerHTML = `<strong>Total: $ ${total.toLocaleString()}</strong>`; cont.appendChild(totalEl); qsa('.removeItem').forEach(b=>b.addEventListener('click', ()=>{ carrito.splice(Number(b.dataset.idx),1); renderCarrito(); })); }
+  qs('#vaciarCarrito') && qs('#vaciarCarrito').addEventListener('click', ()=>{ carrito=[]; renderCarrito(); });
+
+  // Finalizar compra -> guarda pedido en LocalStorage y envía correo a Formspree
+  qs('#finalizarCompra') && qs('#finalizarCompra').addEventListener('click', async ()=>{
+    if(carrito.length===0){ alert('El carrito está vacío.'); return; }
+    const nombre = prompt('Nombre para el pedido:');
+    const correo = prompt('Correo de contacto:');
+    if(!nombre||!correo){ alert('Nombre y correo requeridos'); return; }
+    const pedido = { cliente:nombre, correo, items:carrito, total:carrito.reduce((s,i)=>s+Number(i.precio),0), ts:new Date().toISOString() };
+    // Guardar en LS
+    const data = getData(); data.pedidos.unshift(pedido); setData(data); renderPedidos();
+    // Enviar a Formspree (solo notificación)
+    try{
+      const formData = new FormData();
+      formData.append('nombre', nombre);
+      formData.append('correo', correo);
+      formData.append('asunto', 'Nuevo pedido TechVisga');
+      formData.append('mensaje', `Pedido: ${JSON.stringify(pedido, null, 2)}`);
+      await fetch('https://formspree.io/f/movkonnq', { method:'POST', body: formData, headers:{ 'Accept':'application/json' } });
+    }catch(e){ console.warn('No se pudo notificar Formspree', e); }
+
+    alert('Pedido registrado. Revisa el panel admin para verlo (demo).'); carrito=[]; renderCarrito(); renderPedidos(); updateStats();
+  });
+
+  // ---------- Contact form ----------
+  const contactForm = qs('#contactForm');
+  const formStatus = qs('#formStatus');
+  contactForm && contactForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const nombre = qs('#nombre').value.trim();
+    const correo = qs('#correo').value.trim();
+    const asunto = qs('#asunto').value.trim();
+    const mensaje = qs('#mensaje').value.trim();
+    if(!nombre||!correo||!mensaje){ formStatus.textContent='Por favor completa los campos.'; return; }
+    formStatus.textContent = 'Enviando...';
+    // Enviar a Formspree
+    try{
+      const res = await fetch(contactForm.action, { method:'POST', body:new FormData(contactForm), headers:{ 'Accept':'application/json' } });
+      if(res.ok){ formStatus.textContent='✅ Mensaje enviado.'; contactForm.reset(); }
+      else formStatus.textContent='❌ Error al enviar.';
+    }catch(e){ formStatus.textContent='⚠️ Error de conexión.'; }
+    // Guardar copia local
+    const data = getData(); data.mensajes.unshift({ nombre, correo, asunto, mensaje, ts:new Date().toISOString() }); setData(data); renderMensajes(); updateStats();
+    setTimeout(()=>formStatus.textContent='Verás una confirmación al enviar.', 3000);
+  });
+
+  // ---------- Lightbox ----------
+  function openLightbox(src){ const lb = qs('#lightbox'); qs('#lightboxImg').src = src; lb.classList.add('open'); lb.setAttribute('aria-hidden','false'); }
+  qs('#lightbox') && qs('#lightbox').addEventListener('click', (e)=>{ if(e.target===qs('#lightbox')){ qs('#lightbox').classList.remove('open'); qs('#lightbox').setAttribute('aria-hidden','true'); } });
+
+  // ---------- Admin: login, CRUD y vistas ----------
+  const loginModal = qs('#loginModal');
+  qs('#loginOpen').addEventListener('click', (e)=>{ e.preventDefault(); loginModal.classList.add('open'); loginModal.setAttribute('aria-hidden','false'); });
+  qs('#closeLogin').addEventListener('click', ()=>{ loginModal.classList.remove('open'); loginModal.setAttribute('aria-hidden','true'); });
+  loginModal.addEventListener('click', (e)=>{ if(e.target===loginModal){ loginModal.classList.remove('open'); loginModal.setAttribute('aria-hidden','true'); } });
+
+  qs('#loginForm').addEventListener('submit', (e)=>{
+    e.preventDefault(); const user = qs('#user').value.trim(); const pass = qs('#pass').value.trim();
+    if(user===ADMIN_USER && pass===ADMIN_PASS){ loginModal.classList.remove('open'); loginModal.setAttribute('aria-hidden','true'); qs('#adminPanel').classList.add('open'); qs('#adminStatus').textContent='Conectado'; localStorage.setItem('tv_logged', 'true'); renderAdminViews(); window.scrollTo({top:qs('#admin').offsetTop-70, behavior:'smooth'}); }
+    else alert('Credenciales inválidas (demo)');
+  });
+  qs('#logoutBtn').addEventListener('click', ()=>{ localStorage.removeItem('tv_logged'); qs('#adminPanel').classList.remove('open'); qs('#adminStatus').textContent='No conectado'; alert('Sesión cerrada (demo)'); });
+  if(localStorage.getItem('tv_logged')){ qs('#adminPanel').classList.add('open'); qs('#adminStatus').textContent='Conectado'; }
+
+  // Add product
+  qs('#addProduct').addEventListener('click', async ()=>{
+    const nombre = qs('#newName').value.trim(); const precio = Number(qs('#newPrice').value); const imagen = qs('#newImg').value.trim() || 'https://picsum.photos/seed/new/600/380';
+    if(!nombre||!precio){ alert('Nombre y precio son requeridos'); return; }
+    const data = getData(); const id = data.productos.length? Math.max(...data.productos.map(p=>p.id))+1 : 1; data.productos.unshift({ id, nombre, descripcion:'', precio, imagen }); setData(data); qs('#newName').value=''; qs('#newPrice').value=''; qs('#newImg').value=''; renderAll(); renderAdminViews(); updateStats();
+  });
+
+  // Render admin products, pedidos y mensajes
+  function renderAdminViews(){ renderProductosAdmin(); renderPedidos(); renderMensajes(); updateStats(); }
+  function renderProductosAdmin(){ const data = getData(); const cont = qs('#adminProducts'); cont.innerHTML=''; data.productos.forEach(p=>{ const el = document.createElement('div'); el.className='list-item'; el.innerHTML = `<strong>${p.nombre}</strong> <div class="small">$ ${Number(p.precio).toLocaleString()}</div><div style="margin-top:6px"><button class="btn btn-ghost editProduct" data-id="${p.id}">Editar</button> <button class="btn btn-ghost deleteProduct" data-id="${p.id}">Eliminar</button></div>`; cont.appendChild(el); }); qsa('.deleteProduct').forEach(b=>b.addEventListener('click', ()=>{ if(confirm('Eliminar producto?')){ const data = getData(); data.productos = data.productos.filter(x=>x.id!==Number(b.dataset.id)); setData(data); renderAll(); renderAdminViews(); updateStats(); } })); qsa('.editProduct').forEach(b=>b.addEventListener('click', ()=>{ const id = Number(b.dataset.id); const data = getData(); const p = data.productos.find(x=>x.id===id); const nombre = prompt('Nuevo nombre', p.nombre); const precio = prompt('Nuevo precio', p.precio); if(nombre && precio){ p.nombre = nombre; p.precio = Number(precio); setData(data); renderAll(); renderAdminViews(); updateStats(); } })); }
+
+  function renderPedidos(){ const data = getData(); const cont = qs('#adminPedidos'); cont.innerHTML=''; if(!data.pedidos.length) cont.innerHTML='<div class="small">No hay pedidos.</div>'; data.pedidos.slice(0,50).forEach(p=>{ const el = document.createElement('div'); el.className='list-item'; el.innerHTML = `<strong>${p.cliente}</strong> <div class="small">$ ${Number(p.total).toLocaleString()} — ${new Date(p.ts).toLocaleString()}</div><pre style="white-space:pre-wrap;margin-top:8px">${JSON.stringify(p.items,null,2)}</pre>`; cont.appendChild(el); }); }
+
+  function renderMensajes(){ const data = getData(); const cont = qs('#adminMensajes'); cont.innerHTML=''; if(!data.mensajes.length) cont.innerHTML='<div class="small">No hay mensajes.</div>'; data.mensajes.slice(0,50).forEach(m=>{ const el = document.createElement('div'); el.className='list-item'; el.innerHTML = `<strong>${m.nombre}</strong> <div class="small">${m.correo} — ${new Date(m.ts).toLocaleString()}</div><p style="margin-top:6px">${m.mensaje}</p>`; cont.appendChild(el); }); }
+
+  // Stats
+  function updateStats(){ const data = getData(); qs('#stats').innerHTML = `<div class="small">Productos: <strong>${data.productos.length}</strong></div><div class="small">Pedidos: <strong>${data.pedidos.length}</strong></div><div class="small">Mensajes: <strong>${data.mensajes.length}</strong></div>`; }
+
+  // Seed / clear buttons
+  qs('#seedData').addEventListener('click', seedExample);
+  qs('#clearData').addEventListener('click', clearAll);
+
+  // ---------- Utility: render all ----------
+  function renderAll(){ renderProductos(); renderPortfolioPreview(); renderCarrito(); renderPedidos(); renderMensajes(); updateStats(); }
+
+  // Initial render
+  renderAll();
+
+  // Small interactions
+  qs('#ctaPresupuesto').addEventListener('click', ()=>window.scrollTo({top:qs('#contacto').offsetTop-70,behavior:'smooth'}));
+
+  // Close mobile menu when clicking outside
+  const menuToggle = qs('#menuToggle'); const navLinks = qs('#navLinks');
+  menuToggle && menuToggle.addEventListener('click', ()=>{ navLinks.classList.toggle('active'); menuToggle.classList.toggle('active'); });
+  document.addEventListener('click', (e)=>{ if(!e.target.closest('header.navbar')){ navLinks.classList.remove('active'); if(menuToggle) menuToggle.classList.remove('active'); } });
+
+  // Auto-refresh admin views if logged
+  setInterval(()=>{ if(localStorage.getItem('tv_logged')) renderAdminViews(); }, 8000);
+  </script>
+</body>
+</html>
