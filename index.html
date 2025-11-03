@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TechVisga — Demo (LocalStorage)</title>
+  <title>TechVisga</title>
   <meta name="description" content="TechVisga - Demo funcional usando LocalStorage como base de datos provisoria." />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2721/2721263.png">
@@ -185,7 +185,7 @@
     <div id="loginModal" class="modal" aria-hidden="true">
       <div class="modal-card">
         <h3>Iniciar sesión — Demo</h3>
-        <p class="small">Usuario demo: <code>admin</code> / Contraseña: <code>admin123</code></p>
+        <p class="small">Usuario</p>
         <form id="loginForm">
           <div class="form-row"><input type="text" id="user" placeholder="Usuario" required><input type="password" id="pass" placeholder="Contraseña" required></div>
           <div style="display:flex;gap:10px;margin-top:10px"><button class="btn btn-primary" type="submit">Entrar</button><button type="button" id="closeLogin" class="btn btn-ghost">Cancelar</button></div>
@@ -393,4 +393,5 @@
   setInterval(()=>{ if(localStorage.getItem('tv_logged')) renderAdminViews(); }, 8000);
   </script>
 </body>
+
 </html>
